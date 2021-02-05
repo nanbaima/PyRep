@@ -14,6 +14,7 @@ class Joint(Object):
 
     def __init__(self, name_or_handle: Union[str, int]):
         super().__init__(name_or_handle)
+        self._config_tree = self.get_configuration_tree()
 
     def _get_requested_type(self) -> ObjectType:
         return ObjectType.JOINT
@@ -36,36 +37,15 @@ class Joint(Object):
         """
         return sim.simGetJointPosition(self._handle)
 
-    def set_joint_position(self, position: float,
-                           allow_force_mode=True) -> None:
+    def set_joint_position(self, position: float) -> None:
         """Sets the intrinsic position of the joint.
 
         :param positions: A list of positions of the joints (angular or linear
             values depending on the joint type).
-        :param allow_force_mode: If True, then the position can be set even
-            when the joint mode is in Force mode. It will disable dynamics,
-            move the joint, and then re-enable dynamics.
         """
-        if not allow_force_mode:
-            sim.simSetJointPosition(self._handle, position)
-            return
-
-        is_model = self.is_model()
-        if not is_model:
-            self.set_model(True)
-
-        prior = sim.simGetModelProperty(self.get_handle())
-        p = prior | sim.sim_modelproperty_not_dynamic
-        # Disable the dynamics
-        sim.simSetModelProperty(self._handle, p)
-
+        sim.simSetConfigurationTree(self._config_tree)
         sim.simSetJointPosition(self._handle, position)
         self.set_joint_target_position(position)
-        sim.simExtStep(True)  # Have to step once for changes to take effect
-
-        # Re-enable the dynamics
-        sim.simSetModelProperty(self._handle, prior)
-        self.set_model(is_model)
 
     def get_joint_target_position(self) -> float:
         """Retrieves the target position of a joint.
