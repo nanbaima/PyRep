@@ -131,14 +131,29 @@ class TestObjects(TestCore):
         parent = self.dummy.get_parent()
         self.assertIsNone(parent)
 
-    def test_get_matrix(self):
-        self.assertEqual(len(self.dynamic_cube.get_matrix()), 12)
+    def test_get_set_matrix(self):
+        m = self.dynamic_cube.get_matrix()
+        self.assertEqual(m.shape, (4, 4))
+        self.simple_model.set_matrix(m)
+        self.assertListEqual(self.simple_model.get_matrix().tolist(), m.tolist())
 
     def test_get_set_collidable(self):
         self.dynamic_cube.set_collidable(False)
         self.assertFalse(self.dynamic_cube.is_collidable())
         self.dynamic_cube.set_collidable(True)
         self.assertTrue(self.dynamic_cube.is_collidable())
+
+    def test_get_contact(self):
+        contact = self.dynamic_cube.get_contact(self.simple_model, get_contact_normal=True)
+        self.assertTrue(len(contact) == 0)
+        for _ in range(20):
+            self.pyrep.step()
+        c1 = Shape('colliding_cube1')
+        c0 = Shape('colliding_cube0')
+        contact = c1.get_contact(None, True)
+        self.assertTrue(len(contact) > 0)
+        contact = c0.get_contact(None, True)
+        self.assertTrue(len(contact) > 0)
 
     def test_get_set_measurable(self):
         self.dynamic_cube.set_measurable(False)

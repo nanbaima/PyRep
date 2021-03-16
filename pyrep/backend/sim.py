@@ -1381,6 +1381,32 @@ def simCheckOctreePointOccupancy(octreeHandle, options, points):
         return False
 
 
+def simGetContactInfo(contact_obj_handle, get_contact_normal):
+    index = 0
+    contact_list = []
+    result = 1
+
+    while result > 0:
+        if get_contact_normal:
+            contact = ffi.new('float[9]')
+            ext = sim_handleflag_extended
+        else:
+            contact = ffi.new('float[6]')
+            ext = 0
+
+        object_handles = ffi.new('int[2]')
+        result = lib.simGetContactInfo(sim_handle_all, contact_obj_handle, index + ext, object_handles,
+                                       contact)
+        contact_info = {
+            "contact": list(contact),
+            "contact_handles": list(object_handles)
+        }
+        contact_list.append(contact_info)
+        index += 1
+    contact_list.pop(-1)  # remove the all zero value
+    return contact_list
+
+
 def simGetConfigForTipPose(ikGroupHandle, jointHandles, thresholdDist, maxTimeInMs, metric, collisionPairs, jointOptions, lowLimits, ranges):
     jointCnt = len(jointHandles)
     collisionPairCnt = len(collisionPairs) // 2
@@ -1408,3 +1434,46 @@ def generateIkPath(ikGroupHandle, jointHandles, ptCnt, collisionPairs, jointOpti
         ikGroupHandle, jointCnt, jointHandles, ptCnt, collisionPairCnt,
         collisionPairs, jointOptions, reserved)
     return [] if ret == ffi.NULL else [ret[i] for i in range(ptCnt * jointCnt)]
+
+
+def simGetDecimatedMesh(inVertices, inIndices, decimationPercent):
+    outVerticies = ffi.new('float **')
+    outVerticiesCount = ffi.new('int *')
+    outIndices = ffi.new('int **')
+    outIndicesCount = ffi.new('int *')
+    # outNormals is 3 times the size of outIndicesCount
+    # outNormals = ffi.new('float **')
+
+    ret = lib.simGetDecimatedMesh(inVertices, len(inVertices),
+                                  inIndices, len(inIndices),
+                                  outVerticies, outVerticiesCount,
+                                  outIndices, outIndicesCount,
+                                  decimationPercent, 0, ffi.NULL)
+    _check_return(ret)
+    retVerticies = [outVerticies[0][i]
+                    for i in range(outVerticiesCount[0])]
+    retIndices = [outIndices[0][i]
+                    for i in range(outIndicesCount[0])]
+
+    simReleaseBuffer(ffi.cast('char *', outVerticies[0]))
+    simReleaseBuffer(ffi.cast('char *', outIndices[0]))
+
+    return retVerticies, retIndices
+
+
+def simComputeMassAndInertia(shapeHandle, density):
+    ret = lib.simComputeMassAndInertia(shapeHandle, density)
+    _check_return(ret)
+    return ret
+
+
+def simAddForce(shapeHandle, position, force):
+    ret = lib.simAddForce(shapeHandle, position, force)
+    _check_return(ret)
+
+
+def simAddForceAndTorque(shapeHandle, force, torque):
+    ret = lib.simAddForceAndTorque(shapeHandle,
+                          ffi.NULL if force is None else force,
+                          ffi.NULL if torque is None else torque)
+    _check_return(ret)
