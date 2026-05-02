@@ -3,6 +3,23 @@
 
 __PyRep is a toolkit for robot learning research, built on top of [CoppeliaSim](http://www.coppeliarobotics.com/) (previously called V-REP).__
 
+## Local Workspace Notes
+
+This checkout is a local working copy/fork used by the surrounding robot-learning projects in this workspace.
+
+- `.venv/` exists locally and was created with Python 3.9.
+- `requirements.txt` lists the direct Python dependencies from the upstream project.
+- `requirements.lock.txt` records the currently resolved local dependency set.
+- Runtime still requires a compatible CoppeliaSim installation and the `COPPELIASIM_ROOT` environment variable described below.
+- PyRep support is primarily Linux-oriented; local macOS dependency checks can pass even when simulator runtime support still needs a Linux/CoppeliaSim environment.
+
+For a quick local dependency check:
+
+```bash
+source .venv/bin/activate
+pip install -r requirements.lock.txt
+python -m pip check
+```
 
 - [Install](#install)
 - [Getting Started](#getting-started)
