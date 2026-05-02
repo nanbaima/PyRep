@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.DS_Store
+._*
 
 ./idea
 .idea/
@@ -99,4 +101,3 @@ ENV/
 .mypy_cache/
 
 pyrep/backend/_sim_cffi*
-
